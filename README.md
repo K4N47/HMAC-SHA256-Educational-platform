@@ -1,11 +1,11 @@
-# HMAC-SHA-256 Educational Platform
+HMAC-SHA-256 Educational Platform
 
-CSS 342 Software Engineering — SDU University, 2026  
-**Team:** Nurdanbek Kanat, Kuanishkerey Abdolla, Satzhan Kadir, Bagdat Ingkar, Gulnaz Makuova
+MAT 364 Cryptography — SDU University, 2026  
+Team members:  Nurdanbek Kanat, Kuanishkerey Abdolla, Satzhan Kadir, Bagdat Ingkar, Gulnaz Makuova
 
 ---
 
-## Project structure
+Project structure
 
 ```
 hmac_project/
@@ -32,14 +32,14 @@ hmac_project/
 
 ---
 
-## 1 – Run locally in VSCode
+  1 – Run locally in VSCode
 
-### Step 1 – Open the project
+Step 1 – Open the project
 ```
 File → Open Folder → select hmac_project/
 ```
 
-### Step 2 – Create a virtual environment
+Step 2 – Create a virtual environment
 Open the VSCode terminal (`Ctrl + ~`) and run:
 ```bash
 python -m venv venv
@@ -51,12 +51,12 @@ Activate it:
 
 You should see `(venv)` in your terminal prompt.
 
-### Step 3 – Install dependencies
+Step 3 – Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 4 – Set up environment variables
+Step 4 – Set up environment variables
 ```bash
 # Windows
 copy .env.example .env
@@ -66,7 +66,7 @@ cp .env.example .env
 ```
 Open `.env` and change `SECRET_KEY` and `JWT_SECRET_KEY` to any random strings.
 
-### Step 5 – Run the server
+Step 5 – Run the server
 ```bash
 python -m backend.app
 ```
@@ -77,12 +77,12 @@ The terminal will show:
 ```
 Open **http://localhost:5000** in your browser. ✅
 
-### Step 6 – Stop the server
+Step 6 – Stop the server
 Press `Ctrl + C` in the terminal.
 
 ---
 
-## 2 – Editing code in VSCode
+  2 – Editing code in VSCode
 
 | What to change | File to open |
 |---|---|
@@ -105,7 +105,7 @@ Press `Ctrl + C` in the terminal.
 
 ---
 
-## 3 – API Endpoints reference
+  3 – API Endpoints reference
 
 | Method | URL | Auth | Description |
 |---|---|---|---|
@@ -126,9 +126,9 @@ Authorization: Bearer <token>
 
 ---
 
-## 4 – Make the site public (deployment)
+  4 – Make the site public (deployment)
 
-### Option A – Render.com (FREE, recommended for students)
+  # Option A – Render.com (FREE, recommended for students)
 
 1. Push your project to **GitHub** (create a repo, upload all files).
 2. Go to **https://render.com** → sign up with your GitHub account.
@@ -148,7 +148,7 @@ Authorization: Bearer <token>
 
 ---
 
-### Option B – Railway.app (also free for small projects)
+  # Option B – Railway.app (also free for small projects)
 
 1. Push to GitHub.
 2. Go to **https://railway.app** → New Project → Deploy from GitHub.
@@ -158,7 +158,7 @@ Authorization: Bearer <token>
 
 ---
 
-### Option C – VPS (DigitalOcean / Hetzner) — most control
+  # Option C – VPS (DigitalOcean / Hetzner) — most control
 
 1. Rent a server (Hetzner has €3.29/mo servers).
 2. SSH into the server, clone your repo.
@@ -175,7 +175,7 @@ Authorization: Bearer <token>
 
 ---
 
-## 5 – Switch from SQLite to PostgreSQL
+  5 – Switch from SQLite to PostgreSQL
 
 1. Install psycopg2: `pip install psycopg2-binary`
 2. In `.env` change:
@@ -186,7 +186,7 @@ Authorization: Bearer <token>
 
 ---
 
-## 6 – RFC 2104 Test Vector
+  6 – RFC 2104 Test Vector
 
 | Field | Value |
 |---|---|
@@ -196,7 +196,7 @@ Authorization: Bearer <token>
 
 ---
 
-## 7 – Recommended workflow for the team
+  7 – Recommended workflow for the team
 
 ```
 main branch      → always working, deployed version
