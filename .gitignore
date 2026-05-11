@@ -2,6 +2,6 @@
 *.db
 __pycache__/
 *.pyc
-venv/          ← добавь это, venv не должен быть в репо
+venv/          
 *.pyc
 .DS_Store
