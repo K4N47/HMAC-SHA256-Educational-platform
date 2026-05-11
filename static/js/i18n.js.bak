@@ -1,0 +1,559 @@
+/* ═══════════════════════════════════════
+   i18n.js — Bilingual system EN / RU
+   ═══════════════════════════════════════ */
+
+const LANGS = {
+  en: {
+    // NAV
+    nav_learn:      "LEARN",
+    nav_practice:   "PRACTICE",
+    nav_account:    "ACCOUNT",
+    nav_dashboard:  "🏠 Dashboard",
+    nav_theory:     "📘 Theory",
+    nav_generator:  "🔐 HMAC Generator",
+    nav_stepviz:    "⚙️ Step Visualization",
+    nav_compare:    "🔍 Hash Comparison",
+    nav_verify:     "✔️ Verification",
+    nav_practiceM:  "🧪 Interactive Practice",
+    nav_history:    "🕐 History",
+    nav_settings:   "⚙️ Settings",
+
+    // TOPBAR
+    btn_theme:      "🌙 Theme",
+    btn_lang:       "RU",
+
+    // PAGE TITLES
+    title_dashboard: "Dashboard",
+    title_theory:    "Theory Module",
+    title_generator: "HMAC Generator",
+    title_stepviz:   "Step-by-Step Visualization",
+    title_compare:   "Hash Comparison",
+    title_verify:    "Verification",
+    title_practice:  "Interactive Practice",
+    title_history:   "History",
+    title_settings:  "Settings",
+
+    // DASHBOARD
+    stat_generated: "HMACs Generated",
+    stat_verified:  "Verifications Run",
+    stat_practice:  "Practice Score",
+    stat_theory:    "Theory Progress",
+    progress_label: "📖 Learning Progress",
+    prog_theory:    "Theory",
+    prog_gen:       "Generator",
+    prog_prac:      "Practice",
+    quick_start:    "🚀 Quick Start",
+    qs_theory:      "📘 Start Theory",
+    qs_generator:   "🔐 Try Generator",
+    qs_stepviz:     "⚙️ Step Visualization",
+    qs_practice:    "🧪 Practice Mode",
+
+    // THEORY
+    th_badge:       "Interactive",
+    th1_title:      "1. What is Cryptographic Hashing?",
+    th1_body:       "A hash function takes any input and produces a fixed-size output (digest). SHA-256 always produces 256 bits = 32 bytes = 64 hex characters, regardless of input size. Even a one-character difference creates a completely different hash — this is called the avalanche effect.",
+    th1_p1_title:   "One-Way",
+    th1_p1_desc:    "Cannot reverse the hash to get the original input",
+    th1_p2_title:   "Fixed Length",
+    th1_p2_desc:    "Always 64 hex chars regardless of input size",
+    th1_p3_title:   "Avalanche Effect",
+    th1_p3_desc:    "1 bit change → ~50% different hash bits",
+    th1_p4_title:   "Deterministic",
+    th1_p4_desc:    "Same input always produces the same hash",
+    th1_p5_title:   "Collision Resistant",
+    th1_p5_desc:    "Practically impossible to find two inputs with the same hash",
+    th1_p6_title:   "Fast Computation",
+    th1_p6_desc:    "Efficient enough for real-time use",
+
+    th2_title:      "2. What is HMAC?",
+    th2_body:       "HMAC (Hash-based Message Authentication Code) adds a secret key to hashing. This proves both integrity (message wasn't changed) and authenticity (sender knows the key). HMAC is defined in RFC 2104 and is widely used in APIs, TLS, and session tokens.",
+    th2_b1:         "Without HMAC, an attacker can modify a message and compute a new valid hash — they don't need the key because SHA-256 alone is keyless.",
+    th2_b2:         "With HMAC, computing the correct signature requires the secret key. Even if an attacker sees both the message and the HMAC, they cannot forge a new valid HMAC without the key.",
+
+    th3_title:      "3. The HMAC Formula — click any term!",
+    tt_kopad:       "opad = 0x5C (01011100) repeated 64 times.\nXOR with key to form outer padding — creates a different inner layer.",
+    tt_kipad:       "ipad = 0x36 (00110110) repeated 64 times.\nXOR with key to form inner padding — binds the message to the key.",
+    tt_m:           "m = the message you want to authenticate.\nCan be any length.",
+    th3_leg1:       " — SHA-256 hash function",
+    th3_leg2:       " — Key padded/truncated to 64 bytes",
+    th3_leg3:       " — 0x36 × 64 (inner pad)",
+    th3_leg4:       " — 0x5C × 64 (outer pad)",
+
+    th4_title:      "4. Why Two Nested Hashes?",
+    th4_body:       "The double hashing prevents length-extension attacks. If HMAC were simply H(key ∥ message), an attacker who knows the hash could extend the message and compute a valid hash without knowing the key. The inner hash binds the message to the key, and the outer hash wraps the result with a different key-derived value. An attacker who only sees the final HMAC cannot forge a valid HMAC for an extended message.",
+
+    th5_title:      "5. Key Normalization — Why 64 Bytes?",
+    th5_body:       "SHA-256 processes data in 512-bit (64-byte) blocks. The key must match this block size: if shorter, it is padded with zeros to reach 64 bytes. If longer, it is first hashed with SHA-256 (producing 32 bytes) and then padded to 64 bytes. This ensures consistent block alignment regardless of the key length you choose.",
+
+    th6_title:      "6. Real-World Usage of HMAC",
+    th6_items: [
+      "API Authentication: REST APIs use HMAC to sign requests (AWS Signature v4, GitHub webhooks)",
+      "JWT Tokens: The HS256 algorithm in JSON Web Tokens uses HMAC-SHA-256",
+      "TLS/HTTPS: HMAC is used in the TLS handshake to verify message integrity",
+      "Password Hashing: PBKDF2 uses HMAC as its pseudo-random function",
+      "Message Queues: Kafka, RabbitMQ use HMAC for message authentication"
+    ],
+
+    quiz_title:     "🎯 Theory Quiz — Test Your Knowledge",
+
+    // GENERATOR
+    gen_badge:      "RFC 2104 Compliant",
+    gen_msg_lbl:    "📝 Message",
+    gen_key_lbl:    "🔑 Secret Key",
+    gen_msg_ph:     "Enter your message here...",
+    gen_key_ph:     "Enter secret key...",
+    gen_rnd:        "🎲 Random Key",
+    gen_btn:        "🔐 Generate HMAC-SHA-256",
+    gen_result:     "✅ Generated HMAC-SHA-256",
+    gen_sha_lbl:    "SHA-256 hash of message only:",
+    gen_hmac_lbl:   "HMAC-SHA-256 (message + key):",
+    gen_send_ver:   "📤 Send to Verification",
+    gen_see_steps:  "⚙️ See Step Visualization",
+
+    // STEP VIZ
+    viz_badge:      "Interactive",
+    viz_msg_lbl:    "📝 Message",
+    viz_key_lbl:    "🔑 Secret Key",
+    viz_start:      "▶️ Start Visualization",
+    viz_next:       "Next Step →",
+    viz_restart:    "🔄 Restart",
+    viz_steps: ["Key Normalization", "XOR with ipad", "Inner Hash", "XOR with opad", "Final HMAC"],
+
+    s1_title:       "Step 1 — Key Normalization",
+    s1_explain:     "The HMAC algorithm requires the key to be exactly 64 bytes long (the SHA-256 block size = 512 bits). <strong>If the key is shorter than 64 bytes</strong>, it is padded with zero bytes (0x00) on the right. <strong>If the key is longer than 64 bytes</strong>, it is first hashed with SHA-256, producing 32 bytes, which are then padded to 64 bytes.",
+    s1_orig:        "🔑 Original Key Bytes",
+    s1_padded:      "📦 Padded to 64 bytes",
+    s1_info_pre:    "Key length: ",
+    s1_info_suf:    " bytes → padded with ",
+    s1_info_suf2:   " zero bytes to reach 64",
+
+    s2_title:       "Step 2 — XOR with ipad (Inner Padding)",
+    s2_explain:     "ipad = 0x36 (binary: 00110110) repeated 64 times. We XOR every byte of the padded key K' with 0x36. This XOR operation 'mixes' the key with a fixed constant, creating a unique inner key. The result K'⊕ipad is then concatenated with the message before the first hash.",
+    s2_kp:          "K' (padded key)",
+    s2_ipad:        "⊕ ipad (0x36 × 64)",
+    s2_res:         "= K' ⊕ ipad result",
+
+    s3_title:       "Step 3 — Inner Hash (First SHA-256)",
+    s3_explain:     "Concatenate the result of (K'⊕ipad) with the message, then apply SHA-256. This binds the message to the key. Even if an attacker knows the message, they cannot compute this hash without knowing K'⊕ipad (which requires the secret key).",
+    s3_input:       "Input to SHA-256:",
+    s3_formula:     "(K' ⊕ ipad) ∥ message",
+    s3_output:      "⬇️ SHA-256 Output (Inner Hash):",
+
+    s4_title:       "Step 4 — XOR with opad (Outer Padding)",
+    s4_explain:     "opad = 0x5C (binary: 01011100) repeated 64 times. We XOR the same padded key K' with 0x5C. Note that opad and ipad differ in every bit position — this mathematical property ensures the inner and outer keys are completely different, preventing related-key attacks.",
+    s4_kp:          "K' (padded key)",
+    s4_opad:        "⊕ opad (0x5C × 64)",
+    s4_res:         "= K' ⊕ opad result",
+
+    s5_title:       "Step 5 — Outer Hash (Final HMAC)",
+    s5_explain:     "Concatenate (K'⊕opad) with the Inner Hash from Step 3, then apply SHA-256 one final time. This is the final HMAC-SHA-256 value. The double hashing prevents length-extension attacks and ensures that knowing only the HMAC gives no information about the intermediate values.",
+    s5_formula:     "(K' ⊕ opad) ∥ inner_hash",
+    s5_output:      "⬇️ Final HMAC-SHA-256:",
+    s5_done:        "✅ HMAC-SHA-256 Complete!",
+    s5_done_desc:   "This 256-bit value proves the message is authentic and unmodified — as long as the secret key remains secret.",
+
+    // COMPARE
+    cmp_badge:      "Visual",
+    cmp_desc:       "Change even one character and roughly half of the 256 bits in the hash change. This is the avalanche effect — a fundamental property of secure hash functions.",
+    cmp_msg_a:      "📝 Message A",
+    cmp_msg_b:      "📝 Message B",
+    cmp_key:        "🔑 Shared Secret Key",
+    cmp_msg_a_lbl:  "Message A",
+    cmp_msg_b_lbl:  "Message B (🔴 = different bits)",
+    cmp_bits_lbl:   "Bit pattern:",
+    cmp_diff:       "bits changed",
+    cmp_pct:        "of 256 bits",
+    cmp_same:       "bits same",
+
+    // VERIFY
+    ver_badge:      "Authenticity Check",
+    ver_desc:       "Enter the message, the secret key, and the HMAC you received. The system will recompute and compare hashes using the Web Crypto API.",
+    ver_msg_lbl:    "📝 Message",
+    ver_key_lbl:    "🔑 Secret Key",
+    ver_exp_lbl:    "🔏 Expected HMAC-SHA-256",
+    ver_msg_ph:     "Message to verify...",
+    ver_key_ph:     "Secret key...",
+    ver_exp_ph:     "Paste expected HMAC here...",
+    ver_btn:        "🔍 Verify HMAC",
+    ver_tv:         "Load RFC Test Vector",
+    ver_result:     "Verification Result",
+    ver_exp_disp:   "Expected HMAC:",
+    ver_comp_disp:  "Computed HMAC:",
+    ver_valid:      "✅ VALID — Message is authentic and unmodified",
+    ver_invalid:    "❌ INVALID — HMAC does not match. Message may be altered.",
+
+    // PRACTICE
+    prac_badge:     "Hands-On",
+    tab_xor:        "1️⃣ XOR Practice",
+    tab_drag:       "2️⃣ Step Order",
+    tab_binary:     "3️⃣ Binary XOR",
+    tab_quiz:       "4️⃣ Multi-Choice",
+    tab_fill:       "5️⃣ Formula Fill",
+
+    xor_title:      "Challenge 1 — Manual XOR with ipad",
+    xor_desc:       "XOR each key byte with ipad (0x36). Enter the hex result for each byte. Example: 0x6B ⊕ 0x36 = 0x5D",
+    xor_check:      "✅ Check Answers",
+    xor_hint:       "💡 Hint: XOR table — 1⊕1=0, 1⊕0=1, 0⊕1=1, 0⊕0=0",
+    xor_correct:    "✅ Perfect! All XOR values correct.",
+    xor_wrong:      "❌ Not quite. Correct answers: ",
+
+    drag_title:     "Challenge 2 — Arrange HMAC Steps in Correct Order",
+    drag_desc:      "Drag the algorithm steps into the correct HMAC-SHA-256 execution order.",
+    drag_src:       "Available steps (drag from here):",
+    drag_tgt:       "Drop them in the correct order:",
+    drag_check:     "✅ Check Order",
+    drag_reset:     "🔄 Reset",
+    drag_correct:   "✅ Correct! You understand the HMAC algorithm flow.",
+    drag_wrong:     "❌ Not quite. Correct order: ",
+
+    bin_title:      "Challenge 3 — Binary XOR Visualization",
+    bin_desc:       "Click on the result bits to toggle 0/1 and compute the XOR manually. Each column: top ⊕ middle = bottom (your answer).",
+    bin_check:      "✅ Check Answers",
+    bin_correct:    "✅ Binary XOR mastered!",
+    bin_wrong:      "❌ Check your bits. Remember: XOR rule — same bits → 0, different bits → 1",
+
+    mc_title:       "Challenge 4 — Multiple Choice",
+    mc_new:         "🔄 New Question",
+
+    fill_title:     "Challenge 5 — Complete the HMAC Formula",
+    fill_desc:      "Fill in the blanks to complete the HMAC formula. Select the correct term for each blank.",
+    fill_check:     "✅ Check Formula",
+    fill_reset:     "🔄 Reset",
+
+    // HISTORY
+    hist_badge:     "records",
+    hist_search:    "🔍 Search by message or hash...",
+    hist_empty:     "No history yet. Generate some HMACs to see them here.",
+    hist_none:      "No records found.",
+    hist_gen:       "🔐 Generated",
+    hist_ver_ok:    "✅ Verified",
+    hist_ver_fail:  "❌ Failed",
+
+    // SETTINGS
+    set_appearance: "Appearance",
+    set_dark:       "Dark Theme",
+    set_dark_desc:  "Toggle between dark and light mode",
+    set_light_btn:  "Switch to Light",
+    set_dark_btn:   "Switch to Dark",
+    set_data:       "Data",
+    set_clear:      "Clear History",
+    set_clear_desc: "Remove all stored hash history",
+    set_clear_btn:  "Clear All",
+    set_about:      "About",
+    set_about_body: "HMAC-SHA-256 Educational Platform\nBuilt for CSS 342 – Software Engineering\nTopic: HMAC-SHA-256 (RFC 2104)\nAll cryptographic operations performed using the Web Crypto API.",
+
+    // MISC
+    copy_ok:    "Copied to clipboard!",
+    fill_all:   "Please fill all fields",
+    enter_both: "Please enter both message and key",
+    viz_fill:   "Enter message and key",
+    clear_q:    "Clear all history?",
+    hist_clear: "History cleared",
+  },
+
+  ru: {
+    // NAV
+    nav_learn:      "ОБУЧЕНИЕ",
+    nav_practice:   "ПРАКТИКА",
+    nav_account:    "АККАУНТ",
+    nav_dashboard:  "🏠 Дашборд",
+    nav_theory:     "📘 Теория",
+    nav_generator:  "🔐 Генератор HMAC",
+    nav_stepviz:    "⚙️ Пошаговая визуализация",
+    nav_compare:    "🔍 Сравнение хешей",
+    nav_verify:     "✔️ Проверка",
+    nav_practiceM:  "🧪 Интерактивная практика",
+    nav_history:    "🕐 История",
+    nav_settings:   "⚙️ Настройки",
+
+    // TOPBAR
+    btn_theme: "🌙 Тема",
+    btn_lang:  "EN",
+
+    // PAGE TITLES
+    title_dashboard: "Дашборд",
+    title_theory:    "Теоретический модуль",
+    title_generator: "Генератор HMAC",
+    title_stepviz:   "Пошаговая визуализация",
+    title_compare:   "Сравнение хешей",
+    title_verify:    "Проверка",
+    title_practice:  "Интерактивная практика",
+    title_history:   "История",
+    title_settings:  "Настройки",
+
+    // DASHBOARD
+    stat_generated: "Сгенерировано HMAC",
+    stat_verified:  "Проверок выполнено",
+    stat_practice:  "Очки практики",
+    stat_theory:    "Прогресс теории",
+    progress_label: "📖 Прогресс обучения",
+    prog_theory:    "Теория",
+    prog_gen:       "Генератор",
+    prog_prac:      "Практика",
+    quick_start:    "🚀 Быстрый старт",
+    qs_theory:      "📘 Начать теорию",
+    qs_generator:   "🔐 Попробовать генератор",
+    qs_stepviz:     "⚙️ Пошаговая визуализация",
+    qs_practice:    "🧪 Режим практики",
+
+    // THEORY
+    th_badge:       "Интерактивный",
+    th1_title:      "1. Что такое криптографическое хеширование?",
+    th1_body:       "Хеш-функция принимает любые входные данные и производит выходные данные фиксированного размера (дайджест). SHA-256 всегда производит 256 бит = 32 байта = 64 шестнадцатеричных символа, независимо от размера входа. Даже изменение одного символа создаёт совершенно другой хеш — это называется лавинным эффектом.",
+    th1_p1_title:   "Одностороннесть",
+    th1_p1_desc:    "Невозможно восстановить исходные данные из хеша",
+    th1_p2_title:   "Фиксированная длина",
+    th1_p2_desc:    "Всегда 64 шестнадцатеричных символа независимо от размера входа",
+    th1_p3_title:   "Лавинный эффект",
+    th1_p3_desc:    "Изменение 1 бита → ~50% изменений в хеше",
+    th1_p4_title:   "Детерминизм",
+    th1_p4_desc:    "Одинаковые входные данные всегда дают одинаковый хеш",
+    th1_p5_title:   "Устойчивость к коллизиям",
+    th1_p5_desc:    "Практически невозможно найти два входа с одинаковым хешем",
+    th1_p6_title:   "Быстрое вычисление",
+    th1_p6_desc:    "Достаточно эффективен для применения в реальном времени",
+
+    th2_title:      "2. Что такое HMAC?",
+    th2_body:       "HMAC (код аутентификации сообщений на основе хеша) добавляет секретный ключ к хешированию. Это доказывает как целостность (сообщение не было изменено), так и подлинность (отправитель знает ключ). HMAC определён в RFC 2104 и широко используется в API, TLS и сессионных токенах.",
+    th2_b1:         "Без HMAC злоумышленник может изменить сообщение и вычислить новый хеш — ключ не нужен, потому что SHA-256 сам по себе не имеет ключа.",
+    th2_b2:         "С HMAC для вычисления правильной подписи требуется секретный ключ. Даже если злоумышленник видит сообщение и HMAC, он не может подделать новый HMAC без ключа.",
+
+    th3_title:      "3. Формула HMAC — кликни на любой элемент!",
+    tt_kopad:       "opad = 0x5C (01011100) повторяется 64 раза.\nXOR с ключом создаёт внешнее заполнение.",
+    tt_kipad:       "ipad = 0x36 (00110110) повторяется 64 раза.\nXOR с ключом создаёт внутреннее заполнение.",
+    tt_m:           "m = сообщение, которое нужно аутентифицировать.\nМожет быть любой длины.",
+    th3_leg1:       " — хеш-функция SHA-256",
+    th3_leg2:       " — ключ, дополненный до 64 байт",
+    th3_leg3:       " — 0x36 × 64 (внутреннее заполнение)",
+    th3_leg4:       " — 0x5C × 64 (внешнее заполнение)",
+
+    th4_title:      "4. Почему два вложенных хеша?",
+    th4_body:       "Двойное хеширование предотвращает атаки расширения длины. Если бы HMAC был просто H(ключ ∥ сообщение), злоумышленник, зная хеш, мог бы расширить сообщение и вычислить допустимый хеш без знания ключа. Внутренний хеш привязывает сообщение к ключу, а внешний хеш оборачивает результат другим значением, производным от ключа.",
+
+    th5_title:      "5. Нормализация ключа — почему 64 байта?",
+    th5_body:       "SHA-256 обрабатывает данные блоками по 512 бит (64 байта). Ключ должен соответствовать этому размеру блока: если он короче 64 байт, он дополняется нулевыми байтами (0x00) справа. Если длиннее 64 байт, он сначала хешируется с помощью SHA-256 (32 байта), а затем дополняется до 64 байт.",
+
+    th6_title:      "6. Применение HMAC в реальном мире",
+    th6_items: [
+      "Аутентификация API: REST API используют HMAC для подписи запросов (AWS Signature v4, GitHub webhooks)",
+      "JWT-токены: Алгоритм HS256 в JSON Web Tokens использует HMAC-SHA-256",
+      "TLS/HTTPS: HMAC используется при TLS-рукопожатии для проверки целостности",
+      "Хеширование паролей: PBKDF2 использует HMAC как псевдослучайную функцию",
+      "Очереди сообщений: Kafka, RabbitMQ используют HMAC для аутентификации сообщений"
+    ],
+
+    quiz_title:     "🎯 Тест по теории — Проверь знания",
+
+    // GENERATOR
+    gen_badge:      "Совместим с RFC 2104",
+    gen_msg_lbl:    "📝 Сообщение",
+    gen_key_lbl:    "🔑 Секретный ключ",
+    gen_msg_ph:     "Введите ваше сообщение...",
+    gen_key_ph:     "Введите секретный ключ...",
+    gen_rnd:        "🎲 Случайный ключ",
+    gen_btn:        "🔐 Сгенерировать HMAC-SHA-256",
+    gen_result:     "✅ Сгенерирован HMAC-SHA-256",
+    gen_sha_lbl:    "Хеш SHA-256 только сообщения:",
+    gen_hmac_lbl:   "HMAC-SHA-256 (сообщение + ключ):",
+    gen_send_ver:   "📤 Отправить на проверку",
+    gen_see_steps:  "⚙️ Пошаговая визуализация",
+
+    // STEP VIZ
+    viz_badge:      "Интерактивный",
+    viz_msg_lbl:    "📝 Сообщение",
+    viz_key_lbl:    "🔑 Секретный ключ",
+    viz_start:      "▶️ Начать визуализацию",
+    viz_next:       "Следующий шаг →",
+    viz_restart:    "🔄 Перезапустить",
+    viz_steps: ["Нормализация ключа", "XOR с ipad", "Внутренний хеш", "XOR с opad", "Финальный HMAC"],
+
+    s1_title:       "Шаг 1 — Нормализация ключа",
+    s1_explain:     "Алгоритм HMAC требует, чтобы ключ имел ровно 64 байта (размер блока SHA-256 = 512 бит). <strong>Если ключ короче 64 байт</strong>, он дополняется нулевыми байтами (0x00) справа. <strong>Если ключ длиннее 64 байт</strong>, он сначала хешируется SHA-256 (32 байта), а затем дополняется до 64 байт.",
+    s1_orig:        "🔑 Байты исходного ключа",
+    s1_padded:      "📦 Дополненный до 64 байт",
+    s1_info_pre:    "Длина ключа: ",
+    s1_info_suf:    " байт → добавлено ",
+    s1_info_suf2:   " нулевых байт до 64",
+
+    s2_title:       "Шаг 2 — XOR с ipad (Внутреннее заполнение)",
+    s2_explain:     "ipad = 0x36 (двоичный: 00110110), повторяется 64 раза. Мы выполняем XOR каждого байта дополненного ключа K' с 0x36. Эта операция XOR 'смешивает' ключ с фиксированной константой, создавая уникальный внутренний ключ. Результат K'⊕ipad затем конкатенируется с сообщением перед первым хешем.",
+    s2_kp:          "K' (дополненный ключ)",
+    s2_ipad:        "⊕ ipad (0x36 × 64)",
+    s2_res:         "= результат K' ⊕ ipad",
+
+    s3_title:       "Шаг 3 — Внутренний хеш (первый SHA-256)",
+    s3_explain:     "Конкатенируем результат (K'⊕ipad) с сообщением, затем применяем SHA-256. Это привязывает сообщение к ключу. Даже зная сообщение, злоумышленник не может вычислить этот хеш без знания K'⊕ipad (что требует секретного ключа).",
+    s3_input:       "Вход для SHA-256:",
+    s3_formula:     "(K' ⊕ ipad) ∥ сообщение",
+    s3_output:      "⬇️ Выход SHA-256 (внутренний хеш):",
+
+    s4_title:       "Шаг 4 — XOR с opad (Внешнее заполнение)",
+    s4_explain:     "opad = 0x5C (двоичный: 01011100), повторяется 64 раза. Мы выполняем XOR того же дополненного ключа K' с 0x5C. Обратите внимание: opad и ipad отличаются в каждой позиции бита — это математическое свойство гарантирует, что внутренние и внешние ключи полностью различны, предотвращая атаки на связанные ключи.",
+    s4_kp:          "K' (дополненный ключ)",
+    s4_opad:        "⊕ opad (0x5C × 64)",
+    s4_res:         "= результат K' ⊕ opad",
+
+    s5_title:       "Шаг 5 — Внешний хеш (финальный HMAC)",
+    s5_explain:     "Конкатенируем (K'⊕opad) с внутренним хешем из шага 3, затем применяем SHA-256 последний раз. Это и есть финальное значение HMAC-SHA-256. Двойное хеширование предотвращает атаки расширения длины и гарантирует, что знание только HMAC не даёт информации о промежуточных значениях.",
+    s5_formula:     "(K' ⊕ opad) ∥ внутренний_хеш",
+    s5_output:      "⬇️ Финальный HMAC-SHA-256:",
+    s5_done:        "✅ HMAC-SHA-256 вычислен!",
+    s5_done_desc:   "Это 256-битное значение доказывает подлинность и неизменность сообщения — пока секретный ключ остаётся в тайне.",
+
+    // COMPARE
+    cmp_badge:      "Наглядный",
+    cmp_desc:       "Измените даже один символ — и примерно половина из 256 бит хеша изменится. Это лавинный эффект — фундаментальное свойство безопасных хеш-функций.",
+    cmp_msg_a:      "📝 Сообщение A",
+    cmp_msg_b:      "📝 Сообщение B",
+    cmp_key:        "🔑 Общий секретный ключ",
+    cmp_msg_a_lbl:  "Сообщение A",
+    cmp_msg_b_lbl:  "Сообщение B (🔴 = другие биты)",
+    cmp_bits_lbl:   "Битовый паттерн:",
+    cmp_diff:       "бит изменено",
+    cmp_pct:        "из 256 бит",
+    cmp_same:       "бит совпадают",
+
+    // VERIFY
+    ver_badge:      "Проверка подлинности",
+    ver_desc:       "Введите сообщение, секретный ключ и полученный HMAC. Система пересчитает и сравнит хеши с помощью Web Crypto API.",
+    ver_msg_lbl:    "📝 Сообщение",
+    ver_key_lbl:    "🔑 Секретный ключ",
+    ver_exp_lbl:    "🔏 Ожидаемый HMAC-SHA-256",
+    ver_msg_ph:     "Сообщение для проверки...",
+    ver_key_ph:     "Секретный ключ...",
+    ver_exp_ph:     "Вставьте ожидаемый HMAC сюда...",
+    ver_btn:        "🔍 Проверить HMAC",
+    ver_tv:         "Загрузить RFC тестовый вектор",
+    ver_result:     "Результат проверки",
+    ver_exp_disp:   "Ожидаемый HMAC:",
+    ver_comp_disp:  "Вычисленный HMAC:",
+    ver_valid:      "✅ ВЕРНО — Сообщение подлинно и не изменено",
+    ver_invalid:    "❌ НЕВЕРНО — HMAC не совпадает. Сообщение могло быть изменено.",
+
+    // PRACTICE
+    prac_badge:     "Практика",
+    tab_xor:        "1️⃣ XOR Практика",
+    tab_drag:       "2️⃣ Порядок шагов",
+    tab_binary:     "3️⃣ Двоичный XOR",
+    tab_quiz:       "4️⃣ Тест",
+    tab_fill:       "5️⃣ Заполни формулу",
+
+    xor_title:      "Задание 1 — Ручной XOR с ipad",
+    xor_desc:       "Выполните XOR каждого байта ключа с ipad (0x36). Введите шестнадцатеричный результат. Пример: 0x6B ⊕ 0x36 = 0x5D",
+    xor_check:      "✅ Проверить ответы",
+    xor_hint:       "💡 Подсказка: XOR — 1⊕1=0, 1⊕0=1, 0⊕1=1, 0⊕0=0",
+    xor_correct:    "✅ Отлично! Все значения XOR верны.",
+    xor_wrong:      "❌ Не совсем. Правильные ответы: ",
+
+    drag_title:     "Задание 2 — Расставь шаги HMAC в правильном порядке",
+    drag_desc:      "Перетащи шаги алгоритма в правильный порядок выполнения HMAC-SHA-256.",
+    drag_src:       "Доступные шаги (перетаскивай отсюда):",
+    drag_tgt:       "Перетащи в правильный порядок:",
+    drag_check:     "✅ Проверить порядок",
+    drag_reset:     "🔄 Сбросить",
+    drag_correct:   "✅ Правильно! Ты понимаешь алгоритм HMAC.",
+    drag_wrong:     "❌ Не совсем. Правильный порядок: ",
+
+    bin_title:      "Задание 3 — Визуализация двоичного XOR",
+    bin_desc:       "Кликай на биты результата (0 или 1) чтобы вычислить XOR вручную. Правило: верхний ⊕ средний = нижний (твой ответ).",
+    bin_check:      "✅ Проверить ответы",
+    bin_correct:    "✅ Двоичный XOR освоен!",
+    bin_wrong:      "❌ Проверь биты. Правило XOR — одинаковые биты → 0, разные → 1",
+
+    mc_title:       "Задание 4 — Тест с несколькими вариантами",
+    mc_new:         "🔄 Новый вопрос",
+
+    fill_title:     "Задание 5 — Заполни формулу HMAC",
+    fill_desc:      "Выбери правильный термин для каждого пропуска в формуле HMAC.",
+    fill_check:     "✅ Проверить формулу",
+    fill_reset:     "🔄 Сбросить",
+
+    // HISTORY
+    hist_badge:     "записей",
+    hist_search:    "🔍 Поиск по сообщению или хешу...",
+    hist_empty:     "Пока нет истории. Сгенерируйте HMAC, чтобы увидеть их здесь.",
+    hist_none:      "Записи не найдены.",
+    hist_gen:       "🔐 Сгенерировано",
+    hist_ver_ok:    "✅ Проверено",
+    hist_ver_fail:  "❌ Не прошло",
+
+    // SETTINGS
+    set_appearance: "Внешний вид",
+    set_dark:       "Тёмная тема",
+    set_dark_desc:  "Переключение между тёмным и светлым режимом",
+    set_light_btn:  "Переключить на светлую",
+    set_dark_btn:   "Переключить на тёмную",
+    set_data:       "Данные",
+    set_clear:      "Очистить историю",
+    set_clear_desc: "Удалить все сохранённые записи истории",
+    set_clear_btn:  "Очистить всё",
+    set_about:      "О платформе",
+    set_about_body: "Образовательная платформа HMAC-SHA-256\nСоздана для CSS 342 – Software Engineering\nТема: HMAC-SHA-256 (RFC 2104)\nВсе криптографические операции выполняются с использованием Web Crypto API.",
+
+    // MISC
+    copy_ok:    "Скопировано в буфер обмена!",
+    fill_all:   "Пожалуйста, заполните все поля",
+    enter_both: "Введите сообщение и ключ",
+    viz_fill:   "Введите сообщение и ключ",
+    clear_q:    "Очистить всю историю?",
+    hist_clear: "История очищена",
+  }
+};
+
+// Current language state
+let currentLang = localStorage.getItem('hmac_lang') || 'en';
+
+function t(key) {
+  return (LANGS[currentLang] && LANGS[currentLang][key]) || LANGS['en'][key] || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('hmac_lang', lang);
+  applyTranslations();
+}
+
+function toggleLang() {
+  setLang(currentLang === 'en' ? 'ru' : 'en');
+}
+
+// Apply all translations to the DOM
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      el.placeholder = val;
+    } else {
+      el.textContent = val;
+    }
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    el.innerHTML = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  // Update lang button
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = t('btn_lang');
+  // Update theory list items dynamically
+  updateTheoryLists();
+}
+
+function updateTheoryLists() {
+  const list6 = document.getElementById('th6-list');
+  if (list6) {
+    const items = t('th6_items');
+    if (Array.isArray(items)) {
+      list6.innerHTML = items.map(item => `<li style="margin-bottom:8px;color:var(--muted);font-size:14px">${item}</li>`).join('');
+    }
+  }
+}
+
+window.t = t;
+window.setLang = setLang;
+window.toggleLang = toggleLang;
+window.applyTranslations = applyTranslations;
+window.currentLang = currentLang;

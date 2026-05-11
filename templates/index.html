@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMAC-SHA-256 Educational Platform</title>
+<link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════ -->
+
+<!-- ══════════════════════════════════════
+     AUTH MODAL
+══════════════════════════════════════ -->
+<div id="auth-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.5)">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:48px;margin-bottom:12px">🔐</div>
+      <h2 style="font-size:22px;font-weight:800;color:var(--text)" data-i18n="auth_welcome">HMAC-SHA-256</h2>
+      <p style="font-size:14px;color:var(--muted);margin-top:6px" data-i18n="auth_subtitle">Learn cryptography interactively</p>
+    </div>
+
+    <!-- Step 1: Choose mode -->
+    <div id="auth-mode-select">
+      <button class="btn btn-primary" style="width:100%;padding:14px;margin-bottom:12px;font-size:15px" onclick="continueAsGuest()" data-i18n="auth_guest">👤 Continue as Guest</button>
+      <div style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:12px" data-i18n="auth_or">or</div>
+      <button class="btn btn-secondary" style="width:100%;padding:12px" onclick="showAuthStep('login-form')" data-i18n="auth_login">🔑 Sign In</button>
+      <button class="btn btn-secondary" style="width:100%;padding:12px;margin-top:8px" onclick="showAuthStep('register-form')" data-i18n="auth_register">✨ Create Account</button>
+      <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:16px;line-height:1.5" data-i18n="auth_guest_desc">No registration required. History won't be saved after closing the tab.</p>
+    </div>
+
+    <!-- Step 2: Login -->
+    <div id="auth-login-form" style="display:none">
+      <div class="input-group">
+        <label data-i18n="auth_username">Username</label>
+        <input id="auth-username" type="text" data-i18n-placeholder="auth_username">
+      </div>
+      <div class="input-group">
+        <label data-i18n="auth_password">Password</label>
+        <input id="auth-password" type="password" data-i18n-placeholder="auth_password">
+      </div>
+      <div id="auth-error" style="display:none;color:var(--error);font-size:13px;margin-bottom:12px;padding:8px 12px;background:rgba(247,7,7,.08);border-radius:6px"></div>
+      <button id="login-submit-btn" class="btn btn-primary" style="width:100%;padding:13px;margin-bottom:10px" onclick="handleLogin()" data-i18n="auth_login_btn">Sign In</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" style="flex:1" onclick="showAuthStep('register-form')" data-i18n="auth_no_account">No account? Register</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="showAuthStep('mode-select')" data-i18n="auth_guest">← Guest</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Register -->
+    <div id="auth-register-form" style="display:none">
+      <div class="input-group">
+        <label data-i18n="auth_username">Username</label>
+        <input id="reg-username" type="text" data-i18n-placeholder="auth_username">
+      </div>
+      <div class="input-group">
+        <label data-i18n="auth_email">Email</label>
+        <input id="reg-email" type="email" placeholder="your@email.com">
+      </div>
+      <div class="input-group">
+        <label data-i18n="auth_password">Password</label>
+        <input id="reg-password" type="password" data-i18n-placeholder="auth_pw_short">
+      </div>
+      <div id="reg-error" style="display:none;color:var(--error);font-size:13px;margin-bottom:12px;padding:8px 12px;background:rgba(247,7,7,.08);border-radius:6px"></div>
+      <button id="register-submit-btn" class="btn btn-primary" style="width:100%;padding:13px;margin-bottom:10px" onclick="handleRegister()" data-i18n="auth_reg_btn">Register</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" style="flex:1" onclick="showAuthStep('login-form')" data-i18n="auth_have_account">Already have an account?</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="showAuthStep('mode-select')" data-i18n="auth_guest">← Guest</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sidebar" id="main-sidebar">
+  <div class="sidebar-logo">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div class="sb-logo-text">
+        <h2>🔐 HMAC-SHA-256</h2>
+        <p>Educational Platform</p>
+      </div>
+      <button class="sb-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar" id="sb-toggle-btn">◀</button>
+    </div>
+  </div>
+
+  <div class="nav-section" data-i18n="nav_learn">LEARN</div>
+  <div class="nav-item active" data-nav="dashboard" data-tooltip="Dashboard" onclick="navigate('dashboard')">
+    <span class="nav-icon">🏠</span><span data-i18n="nav_dashboard">Dashboard</span>
+  </div>
+  <div class="nav-item" data-nav="theory" data-tooltip="Theory" onclick="navigate('theory')">
+    <span class="nav-icon">📘</span><span data-i18n="nav_theory">Theory</span>
+  </div>
+
+  <div class="nav-section" data-i18n="nav_practice">PRACTICE</div>
+  <div class="nav-item" data-nav="generator" data-tooltip="HMAC Generator" onclick="navigate('generator')">
+    <span class="nav-icon">🔐</span><span data-i18n="nav_generator">HMAC Generator</span>
+  </div>
+  <div class="nav-item" data-nav="stepviz" data-tooltip="Step Visualization" onclick="navigate('stepviz')">
+    <span class="nav-icon">⚙️</span><span data-i18n="nav_stepviz">Step Visualization</span>
+  </div>
+  <div class="nav-item" data-nav="compare" data-tooltip="Hash Comparison" onclick="navigate('compare')">
+    <span class="nav-icon">🔍</span><span data-i18n="nav_compare">Hash Comparison</span>
+  </div>
+  <div class="nav-item" data-nav="verify" data-tooltip="Verification" onclick="navigate('verify')">
+    <span class="nav-icon">✔️</span><span data-i18n="nav_verify">Verification</span>
+  </div>
+  <div class="nav-item" data-nav="practice" data-tooltip="Interactive Practice" onclick="navigate('practice')">
+    <span class="nav-icon">🧪</span><span data-i18n="nav_practiceM">Interactive Practice</span>
+  </div>
+
+  <div class="nav-section" data-i18n="nav_account">ACCOUNT</div>
+  <div class="nav-item" data-nav="history" data-tooltip="History" onclick="navigate('history')">
+    <span class="nav-icon">🕐</span><span data-i18n="nav_history">History</span>
+  </div>
+  <div class="nav-item" data-nav="settings" data-tooltip="Settings" onclick="navigate('settings')">
+    <span class="nav-icon">⚙️</span><span data-i18n="nav_settings">Settings</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TOPBAR
+══════════════════════════════════════ -->
+<div class="topbar">
+  <button class="btn-icon sb-topbar-toggle" onclick="toggleSidebar()" title="Toggle sidebar" style="padding:7px 10px;font-size:16px">☰</button>
+  <h3 id="page-title">Dashboard</h3>
+  <button class="btn-icon" onclick="toggleTheme()" data-i18n="btn_theme">🌙 Theme</button>
+  <button class="btn-icon" id="lang-btn" onclick="toggleLang()">RU</button>
+  <button class="btn-icon" id="user-btn" onclick="navigate('settings')">👤 Guest</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════ -->
+<div class="main">
+
+<!-- ════════ DASHBOARD ════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="card-grid">
+    <div class="stat-card">
+      <div class="icon">🔐</div>
+      <div class="value" id="stat-total">0</div>
+      <div class="label" data-i18n="stat_generated">HMACs Generated</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">✅</div>
+      <div class="value" id="stat-verified">0</div>
+      <div class="label" data-i18n="stat_verified">Verifications Run</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">🧪</div>
+      <div class="value" id="stat-practice">0</div>
+      <div class="label" data-i18n="stat_practice">Practice Score</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">📚</div>
+      <div class="value" id="stat-theory">0%</div>
+      <div class="label" data-i18n="stat_theory">Theory Progress</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:16px;font-size:16px" data-i18n="progress_label">📖 Learning Progress</h3>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)">
+        <span data-i18n="prog_theory">Theory</span><span id="prog-theory-lbl">0%</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-theory" style="width:0%"></div></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)">
+        <span data-i18n="prog_gen">Generator</span><span id="prog-gen-lbl">0%</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-gen" style="width:0%"></div></div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)">
+        <span data-i18n="prog_prac">Practice</span><span id="prog-prac-lbl">0%</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-prac" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:16px;font-size:16px" data-i18n="quick_start">🚀 Quick Start</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+      <button class="btn btn-primary" onclick="navigate('theory')" data-i18n="qs_theory">📘 Start Theory</button>
+      <button class="btn btn-secondary" onclick="navigate('generator')" data-i18n="qs_generator">🔐 Try Generator</button>
+      <button class="btn btn-secondary" onclick="navigate('stepviz')" data-i18n="qs_stepviz">⚙️ Step Visualization</button>
+      <button class="btn btn-secondary" onclick="navigate('practice')" data-i18n="qs_practice">🧪 Practice Mode</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ THEORY ════════ -->
+<div class="page" id="page-theory">
+  <div class="section-header">
+    <h2 data-i18n="title_theory">Theory Module</h2>
+    <span class="section-badge" data-i18n="th_badge">Interactive</span>
+  </div>
+
+  <div class="card">
+    <!-- Section 1 -->
+    <div class="theory-section">
+      <h3 data-i18n="th1_title">1. What is Cryptographic Hashing?</h3>
+      <p data-i18n="th1_body"></p>
+      <div class="concept-grid" style="margin-top:16px">
+        <div class="concept-box"><div class="concept-icon">🔒</div><div class="concept-title" data-i18n="th1_p1_title">One-Way</div><div class="concept-desc" data-i18n="th1_p1_desc"></div></div>
+        <div class="concept-box"><div class="concept-icon">📏</div><div class="concept-title" data-i18n="th1_p2_title">Fixed Length</div><div class="concept-desc" data-i18n="th1_p2_desc"></div></div>
+        <div class="concept-box"><div class="concept-icon">❄️</div><div class="concept-title" data-i18n="th1_p3_title">Avalanche Effect</div><div class="concept-desc" data-i18n="th1_p3_desc"></div></div>
+        <div class="concept-box"><div class="concept-icon">🎯</div><div class="concept-title" data-i18n="th1_p4_title">Deterministic</div><div class="concept-desc" data-i18n="th1_p4_desc"></div></div>
+        <div class="concept-box"><div class="concept-icon">🛡️</div><div class="concept-title" data-i18n="th1_p5_title">Collision Resistant</div><div class="concept-desc" data-i18n="th1_p5_desc"></div></div>
+        <div class="concept-box"><div class="concept-icon">⚡</div><div class="concept-title" data-i18n="th1_p6_title">Fast Computation</div><div class="concept-desc" data-i18n="th1_p6_desc"></div></div>
+      </div>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="theory-section">
+      <h3 data-i18n="th2_title">2. What is HMAC?</h3>
+      <p data-i18n="th2_body"></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+        <div style="background:rgba(247,7,7,.06);border:1px solid rgba(247,7,7,.2);border-radius:10px;padding:14px">
+          <div style="font-weight:700;color:var(--error);margin-bottom:6px;font-size:13px">❌ Without HMAC</div>
+          <p style="font-size:13px;color:var(--muted);line-height:1.6" data-i18n="th2_b1"></p>
+        </div>
+        <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:14px">
+          <div style="font-weight:700;color:var(--success);margin-bottom:6px;font-size:13px">✅ With HMAC</div>
+          <p style="font-size:13px;color:var(--muted);line-height:1.6" data-i18n="th2_b2"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Formula -->
+    <div class="theory-section">
+      <h3 data-i18n="th3_title">3. The HMAC Formula</h3>
+      <div class="formula-box" style="position:relative;line-height:3">
+        HMAC(K, m) = <span style="color:var(--accent)">H</span>( (<span class="formula-term" style="color:var(--error)">K'⊕opad<span class="tooltip" data-i18n="tt_kopad"></span></span>) ∥ <span style="color:var(--accent)">H</span>( (<span class="formula-term" style="color:var(--success)">K'⊕ipad<span class="tooltip" data-i18n="tt_kipad"></span></span>) ∥ <span class="formula-term" style="color:var(--warn)">m<span class="tooltip" data-i18n="tt_m"></span></span> ) )
+      </div>
+      <div class="formula-legend">
+        <div class="formula-legend-item"><span style="color:var(--accent);font-weight:700">H</span><span data-i18n="th3_leg1"> — SHA-256 hash function</span></div>
+        <div class="formula-legend-item"><span style="color:var(--accent2);font-weight:700">K'</span><span data-i18n="th3_leg2"> — Key padded to 64 bytes</span></div>
+        <div class="formula-legend-item"><span style="color:var(--success);font-weight:700">ipad</span><span data-i18n="th3_leg3"> — 0x36 × 64</span></div>
+        <div class="formula-legend-item"><span style="color:var(--error);font-weight:700">opad</span><span data-i18n="th3_leg4"> — 0x5C × 64</span></div>
+      </div>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="theory-section">
+      <h3 data-i18n="th4_title">4. Why Two Nested Hashes?</h3>
+      <p data-i18n="th4_body"></p>
+    </div>
+
+    <!-- Section 5 -->
+    <div class="theory-section">
+      <h3 data-i18n="th5_title">5. Key Normalization</h3>
+      <p data-i18n="th5_body"></p>
+      <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px">
+          <div style="color:var(--success);font-weight:700;margin-bottom:6px">Key ≤ 64 bytes</div>
+          <div style="color:var(--muted)">Pad with 0x00 to reach 64 bytes</div>
+          <div style="font-family:monospace;font-size:11px;margin-top:8px;color:var(--accent)">K' = K ∥ (0x00 × (64-|K|))</div>
+        </div>
+        <div style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px">
+          <div style="color:var(--warn);font-weight:700;margin-bottom:6px">Key > 64 bytes</div>
+          <div style="color:var(--muted)">Hash it first, then pad</div>
+          <div style="font-family:monospace;font-size:11px;margin-top:8px;color:var(--accent)">K' = SHA-256(K) ∥ (0x00 × 32)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 6 -->
+    <div class="theory-section">
+      <h3 data-i18n="th6_title">6. Real-World Usage</h3>
+      <ul id="th6-list" style="padding-left:20px;margin-top:10px"></ul>
+    </div>
+  </div>
+
+  <!-- THEORY QUIZ -->
+  <div class="card">
+    <h3 style="margin-bottom:16px;font-size:16px" data-i18n="quiz_title">🎯 Theory Quiz</h3>
+    <div id="quiz-q" style="font-size:15px;font-weight:600;margin-bottom:16px"></div>
+    <div id="quiz-options"></div>
+    <div id="quiz-feedback" class="quiz-feedback"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">
+      <span id="quiz-progress" style="font-size:13px;color:var(--muted)"></span>
+      <button class="btn btn-primary" id="quiz-next" onclick="nextTheoryQuestion()" style="display:none">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ GENERATOR ════════ -->
+<div class="page" id="page-generator">
+  <div class="section-header">
+    <h2 data-i18n="title_generator">HMAC Generator</h2>
+    <span class="section-badge" data-i18n="gen_badge">RFC 2104 Compliant</span>
+  </div>
+  <div class="card">
+    <div class="two-col">
+      <div class="input-group">
+        <label data-i18n="gen_msg_lbl">📝 Message</label>
+        <textarea id="gen-msg" rows="4" data-i18n-placeholder="gen_msg_ph">HMAC = Hash-based Message Authentication Code</textarea>
+      </div>
+      <div class="input-group">
+        <label data-i18n="gen_key_lbl">🔑 Secret Key</label>
+        <input id="gen-key" value="sha256" data-i18n-placeholder="gen_key_ph">
+        <button onclick="genRandomKey()" class="btn btn-secondary" style="margin-top:8px;font-size:12px" data-i18n="gen_rnd">🎲 Random Key</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="generateHMAC()" style="width:100%;padding:14px;font-size:15px" data-i18n="gen_btn">🔐 Generate HMAC-SHA-256</button>
+  </div>
+
+  <div class="card" id="gen-result" style="display:none">
+    <h3 style="margin-bottom:16px;font-size:16px" data-i18n="gen_result">✅ Generated HMAC-SHA-256</h3>
+    <div style="margin-bottom:8px;font-size:13px;color:var(--muted)" data-i18n="gen_sha_lbl">SHA-256 hash:</div>
+    <div class="result-box" id="gen-sha-result" style="color:var(--muted);margin-bottom:16px">
+      <button class="copy-btn" onclick="copyResult('gen-sha-result')">Copy</button>
+    </div>
+    <div style="margin-bottom:8px;font-size:13px;color:var(--muted)" data-i18n="gen_hmac_lbl">HMAC-SHA-256:</div>
+    <div class="result-box" id="gen-hmac-result">
+      <button class="copy-btn" onclick="copyResult('gen-hmac-result')">Copy</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="sendToVerify()" data-i18n="gen_send_ver">📤 Send to Verification</button>
+      <button class="btn btn-secondary" onclick="navigate('stepviz')" data-i18n="gen_see_steps">⚙️ See Step Visualization</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ STEP VISUALIZATION ════════ -->
+<div class="page" id="page-stepviz">
+  <div class="section-header">
+    <h2 data-i18n="title_stepviz">Step-by-Step Visualization</h2>
+    <span class="section-badge" data-i18n="viz_badge">Interactive</span>
+  </div>
+  <div class="card">
+    <div class="two-col">
+      <div class="input-group">
+        <label data-i18n="viz_msg_lbl">📝 Message</label>
+        <input id="viz-msg" value="hello" data-i18n-placeholder="viz_msg_lbl">
+      </div>
+      <div class="input-group">
+        <label data-i18n="viz_key_lbl">🔑 Secret Key</label>
+        <input id="viz-key" value="key" data-i18n-placeholder="viz_key_lbl">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="startVisualization()" data-i18n="viz_start">▶️ Start Visualization</button>
+  </div>
+  <div id="viz-area"></div>
+</div>
+
+<!-- ════════ COMPARE ════════ -->
+<div class="page" id="page-compare">
+  <div class="section-header">
+    <h2 data-i18n="title_compare">Hash Comparison</h2>
+    <span class="section-badge" data-i18n="cmp_badge">Visual</span>
+  </div>
+  <div class="card">
+    <p style="color:var(--muted);font-size:14px;margin-bottom:16px" data-i18n="cmp_desc"></p>
+    <div class="two-col">
+      <div class="input-group">
+        <label data-i18n="cmp_msg_a">📝 Message A</label>
+        <input id="cmp-a" value="hello world" oninput="runCompare()">
+      </div>
+      <div class="input-group">
+        <label data-i18n="cmp_msg_b">📝 Message B</label>
+        <input id="cmp-b" value="hello worle" oninput="runCompare()">
+      </div>
+    </div>
+    <div class="input-group">
+      <label data-i18n="cmp_key">🔑 Shared Secret Key</label>
+      <input id="cmp-key" value="key" oninput="runCompare()">
+    </div>
+  </div>
+
+  <div class="hash-compare" id="cmp-result" style="display:none">
+    <div class="card">
+      <h4 style="margin-bottom:10px;color:var(--accent)" data-i18n="cmp_msg_a_lbl">Message A</h4>
+      <div style="font-family:monospace;font-size:12px;margin-bottom:10px" id="cmp-msg-a"></div>
+      <div class="result-box" id="cmp-hash-a" style="font-size:11px;margin-bottom:10px"></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px" data-i18n="cmp_bits_lbl">Bit pattern:</div>
+      <div class="hash-bits" id="cmp-bits-a"></div>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom:10px;color:var(--accent2)" data-i18n="cmp_msg_b_lbl">Message B</h4>
+      <div style="font-family:monospace;font-size:12px;margin-bottom:10px" id="cmp-msg-b"></div>
+      <div class="result-box" id="cmp-hash-b" style="font-size:11px;margin-bottom:10px"></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px" data-i18n="cmp_bits_lbl">Bit pattern:</div>
+      <div class="hash-bits" id="cmp-bits-b"></div>
+    </div>
+  </div>
+  <div class="card" id="cmp-stats" style="display:none">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center">
+      <div><div style="font-size:30px;font-weight:800;color:var(--error)" id="cmp-diff-bits">0</div><div style="font-size:13px;color:var(--muted)" data-i18n="cmp_diff">bits changed</div></div>
+      <div><div style="font-size:30px;font-weight:800;color:var(--warn)" id="cmp-diff-pct">0%</div><div style="font-size:13px;color:var(--muted)" data-i18n="cmp_pct">of 256 bits</div></div>
+      <div><div style="font-size:30px;font-weight:800;color:var(--success)" id="cmp-same-bits">0</div><div style="font-size:13px;color:var(--muted)" data-i18n="cmp_same">bits same</div></div>
+    </div>
+    <div class="progress-bar-wrap" style="margin-top:16px">
+      <div class="progress-bar-fill" id="cmp-bar" style="width:0%;background:linear-gradient(90deg,var(--error),var(--warn))"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ VERIFY ════════ -->
+<div class="page" id="page-verify">
+  <div class="section-header">
+    <h2 data-i18n="title_verify">Verification</h2>
+    <span class="section-badge" data-i18n="ver_badge">Authenticity Check</span>
+  </div>
+  <div class="card">
+    <p style="color:var(--muted);font-size:14px;margin-bottom:20px" data-i18n="ver_desc"></p>
+    <div class="input-group">
+      <label data-i18n="ver_msg_lbl">📝 Message</label>
+      <textarea id="ver-msg" rows="3" data-i18n-placeholder="ver_msg_ph">HMAC = Hash-based Message Authentication Code</textarea>
+    </div>
+    <div class="input-group">
+      <label data-i18n="ver_key_lbl">🔑 Secret Key</label>
+      <input id="ver-key" data-i18n-placeholder="ver_key_ph" value="sha256">
+    </div>
+    <div class="input-group">
+      <label data-i18n="ver_exp_lbl">🔏 Expected HMAC-SHA-256</label>
+      <input id="ver-expected" data-i18n-placeholder="ver_exp_ph">
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="verifyHMAC()" style="flex:1;padding:14px;min-width:180px" data-i18n="ver_btn">🔍 Verify HMAC</button>
+      <button class="btn btn-secondary" onclick="loadTestVector()" data-i18n="ver_tv">Load RFC Test Vector</button>
+    </div>
+  </div>
+  <div class="card" id="ver-result" style="display:none">
+    <h3 style="margin-bottom:16px" data-i18n="ver_result">Verification Result</h3>
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px" data-i18n="ver_exp_disp">Expected HMAC:</div>
+      <div class="result-box" id="ver-expected-display" style="font-size:11px;color:var(--muted)"></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px" data-i18n="ver_comp_disp">Computed HMAC:</div>
+      <div class="result-box" id="ver-computed-display" style="font-size:11px"></div>
+    </div>
+    <div id="ver-verdict"></div>
+  </div>
+</div>
+
+<!-- ════════ INTERACTIVE PRACTICE ════════ -->
+<div class="page" id="page-practice">
+  <div class="section-header">
+    <h2 data-i18n="title_practice">Interactive Practice</h2>
+    <span class="section-badge" data-i18n="prac_badge">Hands-On</span>
+    <span class="score-badge">Score: <span id="practice-total-score">0</span></span>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="xor"    onclick="switchPracticeTab('xor')"    data-i18n="tab_xor">1️⃣ XOR Practice</button>
+    <button class="tab-btn"        data-tab="drag"   onclick="switchPracticeTab('drag')"   data-i18n="tab_drag">2️⃣ Step Order</button>
+    <button class="tab-btn"        data-tab="binary" onclick="switchPracticeTab('binary')" data-i18n="tab_binary">3️⃣ Binary XOR</button>
+    <button class="tab-btn"        data-tab="mc"     onclick="switchPracticeTab('mc')"     data-i18n="tab_quiz">4️⃣ Multi-Choice</button>
+    <button class="tab-btn"        data-tab="fill"   onclick="switchPracticeTab('fill')"   data-i18n="tab_fill">5️⃣ Formula Fill</button>
+  </div>
+
+  <!-- Tab 1: XOR -->
+  <div class="tab-content active" id="tab-xor">
+    <div class="xor-challenge-layout">
+    <div class="card" style="min-width:0">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+        <div>
+          <h3 data-i18n="xor_title">Challenge 1 — Manual XOR</h3>
+          <p style="color:var(--muted);font-size:13px;margin-top:6px" data-i18n="xor_desc"></p>
+        </div>
+        <span class="score-badge"><span id="xor-score"></span></span>
+      </div>
+      <div style="margin-bottom:14px">
+        <button id="hint-xor-1-btn" class="btn-hint" onclick="toggleHint('hint-xor-1')" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">💡 Show Hint</button>
+        <div id="hint-xor-1" style="display:none;margin-top:10px;padding:12px 16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:13px;color:var(--muted);line-height:1.7" data-i18n="xor_hint_body"></div>
+      </div>
+      <div id="xor-practice-area"></div>
+      <button class="btn btn-primary" onclick="checkXOR()" style="margin-top:14px" data-i18n="xor_check">✅ Check Answers</button>
+      <div id="xor-feedback" class="quiz-feedback"></div>
+    </div><!-- /xor card -->
+    <div id="hex-calc-container"></div>
+    </div><!-- /xor-challenge-layout -->
+  </div>
+
+  <!-- Tab 2: Drag & Drop -->
+  <div class="tab-content" id="tab-drag">
+    <div class="card">
+      <h3 data-i18n="drag_title">Challenge 2 — Arrange HMAC Steps</h3>
+      <p style="color:var(--muted);font-size:13px;margin-top:6px;margin-bottom:12px" data-i18n="drag_desc"></p>
+      <div style="margin-bottom:14px">
+        <button id="hint-drag-1-btn" class="btn-hint" onclick="toggleHint('hint-drag-1')" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">💡 Show Hint</button>
+        <div id="hint-drag-1" style="display:none;margin-top:10px;padding:12px 16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:13px;color:var(--muted);line-height:1.7" data-i18n="drag_hint_body"></div>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px" data-i18n="drag_src">Available steps:</div>
+      <div class="drag-zone" id="drag-source" style="margin-bottom:20px;min-height:60px"></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px" data-i18n="drag_tgt">Drop in correct order:</div>
+      <div class="drag-zone" id="drag-target" style="min-height:90px"></div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-primary" onclick="checkDragOrder()" data-i18n="drag_check">✅ Check Order</button>
+        <button class="btn btn-secondary" onclick="resetDrag()" data-i18n="drag_reset">🔄 Reset</button>
+      </div>
+      <div id="drag-feedback" class="quiz-feedback"></div>
+    </div>
+  </div>
+
+  <!-- Tab 3: Binary XOR -->
+  <div class="tab-content" id="tab-binary">
+    <div class="card">
+      <h3 data-i18n="bin_title">Challenge 3 — Binary XOR</h3>
+      <p style="color:var(--muted);font-size:13px;margin-top:6px;margin-bottom:12px" data-i18n="bin_desc"></p>
+      <div style="margin-bottom:14px">
+        <button id="hint-bin-1-btn" class="btn-hint" onclick="toggleHint('hint-bin-1')" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">💡 Show Hint</button>
+        <div id="hint-bin-1" style="display:none;margin-top:10px;padding:12px 16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:13px;color:var(--muted);line-height:1.7" data-i18n="bin_hint_body"></div>
+      </div>
+      <div id="binary-xor-area"></div>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="checkBinaryXOR()" data-i18n="bin_check">✅ Check</button>
+        <button class="btn btn-secondary" onclick="initBinaryXOR()">🔄 New</button>
+      </div>
+      <div id="bin-feedback" class="quiz-feedback"></div>
+    </div>
+  </div>
+
+  <!-- Tab 4: Multiple Choice -->
+  <div class="tab-content" id="tab-mc">
+    <div class="card">
+      <h3 data-i18n="mc_title">Challenge 4 — Multiple Choice</h3>
+      <div id="mc-question" style="font-size:15px;font-weight:600;margin:16px 0"></div>
+      <div id="mc-options"></div>
+      <div id="mc-feedback" class="quiz-feedback"></div>
+      <div style="margin-top:14px">
+        <button id="hint-mc-1-btn" class="btn-hint" onclick="toggleHint('hint-mc-1')" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">💡 Show Hint</button>
+        <div id="hint-mc-1" style="display:none;margin-top:10px;padding:12px 16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:13px;color:var(--muted);line-height:1.7" data-i18n="mc_hint_body"></div>
+      </div>
+      <button class="btn btn-secondary" style="margin-top:12px" onclick="loadMCQuestion()" data-i18n="mc_new">🔄 New Question</button>
+    </div>
+  </div>
+
+  <!-- Tab 5: Formula Fill -->
+  <div class="tab-content" id="tab-fill">
+    <div class="card">
+      <h3 data-i18n="fill_title">Challenge 5 — Complete the Formula</h3>
+      <p style="color:var(--muted);font-size:13px;margin-top:6px;margin-bottom:12px" data-i18n="fill_desc"></p>
+      <div style="margin-bottom:14px">
+        <button id="hint-fill-1-btn" class="btn-hint" onclick="toggleHint('hint-fill-1')" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">💡 Show Hint</button>
+        <div id="hint-fill-1" style="display:none;margin-top:10px;padding:12px 16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:13px;color:var(--muted);line-height:1.7" data-i18n="fill_hint_body"></div>
+      </div>
+      <div id="fill-formula-area"></div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-primary" onclick="checkFillFormula()" data-i18n="fill_check">✅ Check Formula</button>
+        <button class="btn btn-secondary" onclick="initFillFormula()" data-i18n="fill_reset">🔄 Reset</button>
+      </div>
+      <div id="fill-feedback" class="quiz-feedback"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ HISTORY ════════ -->
+<div class="page" id="page-history">
+  <div class="section-header">
+    <h2 data-i18n="title_history">History</h2>
+    <span class="section-badge" id="hist-count-badge">0 records</span>
+  </div>
+  <div class="card">
+    <div class="input-group">
+      <label>🔍</label>
+      <input id="hist-search" data-i18n-placeholder="hist_search" oninput="renderHistory()">
+    </div>
+  </div>
+  <div id="history-list">
+    <div style="text-align:center;color:var(--muted);padding:40px" data-i18n="hist_empty">No history yet.</div>
+  </div>
+</div>
+
+<!-- ════════ SETTINGS ════════ -->
+<div class="page" id="page-settings">
+  <div class="section-header">
+    <h2 data-i18n="title_settings">Settings</h2>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:16px;font-size:16px" data-i18n="set_appearance">Appearance</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-weight:600" data-i18n="set_dark">Dark Theme</div>
+        <div style="font-size:13px;color:var(--muted)" data-i18n="set_dark_desc">Toggle between dark and light mode</div>
+      </div>
+      <button class="btn btn-secondary" onclick="toggleTheme()" id="theme-settings-btn" data-i18n="set_light_btn">Switch to Light</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:16px;font-size:16px" data-i18n="set_data">Data</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0">
+      <div>
+        <div style="font-weight:600" data-i18n="set_clear">Clear History</div>
+        <div style="font-size:13px;color:var(--muted)" data-i18n="set_clear_desc">Remove all stored records</div>
+      </div>
+      <button class="btn btn-danger" onclick="clearHistory()" data-i18n="set_clear_btn">Clear All</button>
+    </div>
+  </div>
+  <div class="card" id="account-settings-card">
+    <!-- filled by updateSettingsAccount() in main.js -->
+    <h3 style="margin-bottom:16px;font-size:16px">👤 Account</h3>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:16px;font-size:16px" data-i18n="set_about">About</h3>
+    <div style="color:var(--muted);font-size:14px;line-height:1.8" data-i18n="set_about_body"></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ══════════════════════════════════════
+     SCRIPTS (order matters!)
+══════════════════════════════════════ -->
+<script src="/static/js/i18n.js"></script>
+<script src="/static/js/crypto.js"></script>
+<script src="/static/js/practice.js"></script>
+<script src="/static/js/visualization.js"></script>
+<script src="/static/js/main.js"></script>
+
+</body>
+</html>
