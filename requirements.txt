@@ -5,5 +5,7 @@ flask-cors>=4.0
 bcrypt>=4.1
 python-dotenv>=1.0
 gunicorn>=21.0
+psycopg2-binary>=2.9
 # For PostgreSQL in production (optional in dev):
 # psycopg2-binary>=2.9
+
