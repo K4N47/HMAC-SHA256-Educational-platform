@@ -73,7 +73,7 @@ function initXORPractice() {
   const area = document.getElementById('xor-practice-area');
   if (!area) return;
   area.innerHTML = XOR_KEY_BYTES.map((b, i) => `
-    <div class="xor-row anim-row">
+    <div class="xor-row">
       <span class="xor-label" style="color:var(--accent2)">0x${toHex(b)}</span>
       <span style="font-size:11px;color:var(--muted);font-family:monospace">(${byteToBin(b)})</span>
       <span class="xor-op">⊕</span>
@@ -84,6 +84,13 @@ function initXORPractice() {
     </div>`).join('');
   document.getElementById('xor-feedback').style.display = 'none';
   document.getElementById('xor-score').textContent = '';
+  // Force rows visible (safety: bypass any animation fill-mode opacity:0)
+  requestAnimationFrame(() => {
+    document.querySelectorAll('#xor-practice-area .xor-row').forEach(r => {
+      r.style.opacity = '1';
+      r.style.transform = 'none';
+    });
+  });
   // Render the hex calculator panel
   renderHexCalculator();
 }
@@ -112,24 +119,46 @@ function checkXOR() {
   document.getElementById('xor-score').textContent = `${correct}/${XOR_KEY_BYTES.length}`;
 }
 
-// ── CHALLENGE 2: Drag & Drop ──
+// ── CHALLENGE 2: Drag & Drop (optimised) ──
+// Use a module-level reference — avoids querySelectorAll('.drag-item') on every drop
+let _draggedEl = null;
+
+function _freshZone(id) {
+  // Replace zone with a clone to wipe all accumulated event listeners
+  const old  = document.getElementById(id);
+  if (!old) return null;
+  const clone = old.cloneNode(false);   // shallow: copies id/class, no children
+  old.parentNode.replaceChild(clone, old);
+  return clone;
+}
+
+function _setupDropZone(zone) {
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', ()  => zone.classList.remove('drag-over'));
+  zone.addEventListener('dragend',   ()  => { zone.classList.remove('drag-over'); });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    if (_draggedEl) zone.appendChild(_draggedEl);   // direct reference, no DOM scan
+  });
+}
+
 function initDragPractice() {
-  const CORRECT_DRAG_ORDER = getCorrectDragOrder();
-  const shuffled = [...CORRECT_DRAG_ORDER].sort(() => Math.random() - .5);
-  const src = document.getElementById('drag-source');
-  const tgt = document.getElementById('drag-target');
+  const src = _freshZone('drag-source');
+  const tgt = _freshZone('drag-target');
   if (!src || !tgt) return;
-  src.innerHTML = '';
-  tgt.innerHTML = '';
-  document.getElementById('drag-feedback').style.display = 'none';
+
+  const order   = getCorrectDragOrder();
+  const shuffled = [...order].sort(() => Math.random() - .5);
 
   shuffled.forEach(step => {
-    const stepIdx = getCorrectDragOrder().indexOf(step) + 1;
-    src.appendChild(createDragItem(step, stepIdx));
+    src.appendChild(createDragItem(step, order.indexOf(step) + 1));
   });
 
-  setupDropZone(src);
-  setupDropZone(tgt);
+  _setupDropZone(src);
+  _setupDropZone(tgt);
+  document.getElementById('drag-feedback').style.display = 'none';
+  tgt.classList.remove('correct-zone');
 }
 
 function createDragItem(text, stepIdx) {
@@ -138,31 +167,9 @@ function createDragItem(text, stepIdx) {
   el.textContent = text;
   el.draggable = true;
   if (stepIdx !== undefined) el.setAttribute('data-step', stepIdx);
-  el.addEventListener('dragstart', e => {
-    e.dataTransfer.setData('text', text);
-    e.dataTransfer.setData('step', stepIdx !== undefined ? stepIdx : '');
-    el.style.opacity = '.5';
-  });
-  el.addEventListener('dragend', () => { el.style.opacity = '1'; });
+  el.addEventListener('dragstart', () => { _draggedEl = el; el.style.opacity = '.5'; });
+  el.addEventListener('dragend',   () => { el.style.opacity = '1'; _draggedEl = null; });
   return el;
-}
-
-function setupDropZone(zone) {
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('drag-over');
-    const text = e.dataTransfer.getData('text');
-    const stepIdx = e.dataTransfer.getData('step');
-    // Remove from both zones
-    document.querySelectorAll('.drag-item').forEach(el => {
-      if (el.textContent === text) el.remove();
-    });
-    zone.appendChild(createDragItem(text, stepIdx ? parseInt(stepIdx) : undefined));
-    setupDropZone(document.getElementById('drag-source'));
-    setupDropZone(document.getElementById('drag-target'));
-  });
 }
 
 function checkDragOrder() {
@@ -185,10 +192,7 @@ function checkDragOrder() {
   }
 }
 
-function resetDrag() {
-  document.getElementById('drag-target').classList.remove('correct-zone');
-  initDragPractice();
-}
+function resetDrag() { initDragPractice(); }
 
 // ── CHALLENGE 3: Binary XOR ──
 let binXORData = { a: [], b: [], answer: [], userAnswer: [] };
@@ -261,14 +265,25 @@ function checkBinaryXOR() {
   }
 }
 
+// ── SHUFFLE HELPER ──
+function shuffleQuestion(q) {
+  const tagged = q.opts.map((opt, i) => ({ opt, correct: i === q.ans }));
+  for (let i = tagged.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [tagged[i], tagged[j]] = [tagged[j], tagged[i]];
+  }
+  return { ...q, opts: tagged.map(x => x.opt), ans: tagged.findIndex(x => x.correct) };
+}
+
 // ── CHALLENGE 4: Multiple Choice Quiz ──
-let mcState = { index: 0, answered: false };
+let mcState = { index: 0, answered: false, currentQ: null };
 
 function loadMCQuestion() {
   const pool = QUIZ_DATA[currentLang] || QUIZ_DATA['en'];
   mcState.index = Math.floor(Math.random() * pool.length);
   mcState.answered = false;
-  const q = pool[mcState.index];
+  const q = shuffleQuestion(pool[mcState.index]);  // shuffle options every time
+  mcState.currentQ = q;
   document.getElementById('mc-question').textContent = q.q;
   document.getElementById('mc-options').innerHTML = q.opts.map((o, i) =>
     `<div class="quiz-option" onclick="answerMC(${i})">${o}</div>`
@@ -279,8 +294,7 @@ function loadMCQuestion() {
 function answerMC(choice) {
   if (mcState.answered) return;
   mcState.answered = true;
-  const pool = QUIZ_DATA[currentLang] || QUIZ_DATA['en'];
-  const q = pool[mcState.index];
+  const q = mcState.currentQ;   // shuffled version with updated ans index
   const opts = document.querySelectorAll('#mc-options .quiz-option');
   opts.forEach(o => o.classList.add('disabled'));
   opts[q.ans].classList.add('correct');
@@ -431,7 +445,7 @@ function _calcUpdateDisplay(exprOverride) {
   // Disable non-binary digit buttons in BIN mode
   document.querySelectorAll('.calc-digit-btn[data-k]').forEach(btn => {
     const k = btn.getAttribute('data-k');
-    const enabled = _calcMode === 'hex' || k === '0' || k === '1';
+    const enabled = _calcMode === 'hex' || k === '0' || k === '1' || k === '⌫';
     btn.classList.toggle('calc-digit-disabled', !enabled);
   });
 
@@ -593,7 +607,7 @@ const THEORY_QUIZ = {
   ru: QUIZ_DATA.ru
 };
 
-let theoryState = { index: 0, answered: false };
+let theoryState = { index: 0, answered: false, currentQ: null };
 
 function loadTheoryQuiz() { showTheoryQuestion(0); }
 
@@ -601,7 +615,8 @@ function showTheoryQuestion(idx) {
   theoryState.index = idx;
   theoryState.answered = false;
   const pool = QUIZ_DATA[currentLang] || QUIZ_DATA['en'];
-  const q = pool[idx % pool.length];
+  const q = shuffleQuestion(pool[idx % pool.length]);  // shuffle options every time
+  theoryState.currentQ = q;
   document.getElementById('quiz-q').textContent = q.q;
   document.getElementById('quiz-options').innerHTML = q.opts.map((o, i) =>
     `<div class="quiz-option" onclick="answerTheory(${i})">${o}</div>`
@@ -617,8 +632,7 @@ function showTheoryQuestion(idx) {
 function answerTheory(choice) {
   if (theoryState.answered) return;
   theoryState.answered = true;
-  const pool = QUIZ_DATA[currentLang] || QUIZ_DATA['en'];
-  const q = pool[theoryState.index % pool.length];
+  const q = theoryState.currentQ;   // shuffled version with updated ans index
   const opts = document.querySelectorAll('#quiz-options .quiz-option');
   opts.forEach(o => o.classList.add('disabled'));
   opts[q.ans].classList.add('correct');
