@@ -134,7 +134,7 @@ def compute_steps(message: str, secret_key: str) -> list:
 # ── RFC 2104 test vector ──────────────────────────────────────────────────────
 
 RFC_TEST_VECTOR = {
-    "key": "key",
-    "message": "The quick brown fox jumps over the lazy dog",
+    "key": "sha256",
+    "message": "HMAC = Hash-based Message Authentication Code",
     "expected_hmac": "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8",
 }
