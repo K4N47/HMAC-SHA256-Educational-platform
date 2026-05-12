@@ -129,7 +129,6 @@ Authorization: Bearer <token>
   4 – Make the site public (deployment)
 
   # Option A – Render.com (FREE, recommended for students)
-  Update: - server created on Render: https://hmac-platform.onrender.com/
 
 1. Push your project to **GitHub** (create a repo, upload all files).
 2. Go to **https://render.com** → sign up with your GitHub account.
@@ -177,7 +176,7 @@ Authorization: Bearer <token>
 ---
 
   5 – Switch from SQLite to PostgreSQL
-DB updated: now in PostgreSQL
+  
 1. Install psycopg2: `pip install psycopg2-binary`
 2. In `.env` change:
    ```
